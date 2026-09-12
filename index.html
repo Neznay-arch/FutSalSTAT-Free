@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Futsal Stat - Статистика мини-футбола</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Экран создания нового матча -->
+        <section id="new-match-screen" class="screen">
+            <h1>Новый матч</h1>
+            <form id="new-match-form">
+                <div class="form-group">
+                    <label for="team1-name">Команда 1</label>
+                    <input type="text" id="team1-name" placeholder="Название команды 1" required>
+                </div>
+                <div class="form-group">
+                    <label for="team2-name">Команда 2</label>
+                    <input type="text" id="team2-name" placeholder="Название команды 2" required>
+                </div>
+                <div class="form-group">
+                    <label for="period-duration">Длительность периода (мин)</label>
+                    <input type="number" id="period-duration" value="20" min="1" max="60" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Начать матч</button>
+            </form>
+        </section>
+
+        <!-- Экран матча -->
+        <section id="match-screen" class="screen hidden">
+            <div class="scoreboard">
+                <div class="team team1">
+                    <h2 id="team1-display">Команда 1</h2>
+                    <div class="score" id="score1">0</div>
+                    <button class="btn btn-goal" data-team="1">+1 гол</button>
+                </div>
+                
+                <div class="timer-section">
+                    <div class="timer" id="timer">20:00</div>
+                    <div class="period" id="period-display">1-й период</div>
+                    <button class="btn btn-pause" id="pause-btn">Пауза</button>
+                </div>
+                
+                <div class="team team2">
+                    <h2 id="team2-display">Команда 2</h2>
+                    <div class="score" id="score2">0</div>
+                    <button class="btn btn-goal" data-team="2">+1 гол</button>
+                </div>
+            </div>
+            
+            <button class="btn btn-finish" id="finish-btn">Завершить матч</button>
+        </section>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
