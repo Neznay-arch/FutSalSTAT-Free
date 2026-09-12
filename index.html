@@ -9,207 +9,112 @@
 <body>
     <div class="container">
         <!-- Экран создания нового матча -->
-        <section id="new-match-screen" class="screen">
+        <section id="screen-new-match" class="screen">
             <h1>Новый матч</h1>
-            <form id="new-match-form">
-                <div class="team-section">
-                    <div class="form-group">
-                        <label for="team1-name">Команда 1</label>
-                        <input type="text" id="team1-name" placeholder="Название команды 1" required>
-                    </div>
-                    
-                    <!-- Секция игроков команды 1 -->
-                    <div class="players-section">
-                        <h3>Игроки команды 1</h3>
-                        <div id="team1-players-list" class="players-list"></div>
-                        
-                        <button type="button" class="btn btn-add-player" data-team="1">+ Добавить игрока</button>
-                        
-                        <!-- Форма добавления игрока (скрыта по умолчанию) -->
-                        <div id="team1-player-form" class="player-form hidden">
-                            <input type="text" id="team1-player-name" placeholder="Имя игрока" maxlength="30">
-                            <input type="number" id="team1-player-number" placeholder="Номер (опционально)" min="1" max="99">
-                            <div class="player-form-buttons">
-                                <button type="button" class="btn btn-save-player" data-team="1">Сохранить</button>
-                                <button type="button" class="btn btn-cancel-player" data-team="1">Отмена</button>
-                            </div>
-                        </div>
-                        
-                        <p class="players-count" id="team1-players-count">0 игроков (минимум 1, максимум 12)</p>
-                    </div>
-                </div>
-                
-                <div class="team-section">
-                    <div class="form-group">
-                        <label for="team2-name">Команда 2</label>
-                        <input type="text" id="team2-name" placeholder="Название команды 2" required>
-                    </div>
-                    
-                    <!-- Секция игроков команды 2 -->
-                    <div class="players-section">
-                        <h3>Игроки команды 2</h3>
-                        <div id="team2-players-list" class="players-list"></div>
-                        
-                        <button type="button" class="btn btn-add-player" data-team="2">+ Добавить игрока</button>
-                        
-                        <!-- Форма добавления игрока (скрыта по умолчанию) -->
-                        <div id="team2-player-form" class="player-form hidden">
-                            <input type="text" id="team2-player-name" placeholder="Имя игрока" maxlength="30">
-                            <input type="number" id="team2-player-number" placeholder="Номер (опционально)" min="1" max="99">
-                            <div class="player-form-buttons">
-                                <button type="button" class="btn btn-save-player" data-team="2">Сохранить</button>
-                                <button type="button" class="btn btn-cancel-player" data-team="2">Отмена</button>
-                            </div>
-                        </div>
-                        
-                        <p class="players-count" id="team2-players-count">0 игроков (минимум 1, максимум 12)</p>
-                    </div>
-                </div>
-                
+            
+            <div class="team-section">
                 <div class="form-group">
-                    <label for="period-duration">Длительность периода (мин)</label>
-                    <input type="number" id="period-duration" value="20" min="1" max="60" required>
+                    <label>Команда 1</label>
+                    <input type="text" id="team1-name-input" placeholder="Название команды 1" value="">
                 </div>
-                <button type="submit" class="btn btn-primary">Начать матч</button>
-            </form>
+                
+                <div class="players-section">
+                    <h3 id="team1-header">Команда 1</h3>
+                    <div id="team1-players-list" class="players-list"></div>
+                    
+                    <button type="button" class="btn btn-add-player" data-action="show-add-player" data-team="team1">+ Добавить игрока</button>
+                    
+                    <div id="team1-add-form" class="player-form hidden">
+                        <input type="text" name="name" placeholder="Имя игрока" maxlength="30">
+                        <input type="number" name="number" placeholder="Номер (опционально)" min="1" max="99">
+                        <div class="player-form-buttons">
+                            <button type="button" class="btn btn-save-player" data-action="add-player" data-team="team1">Сохранить</button>
+                            <button type="button" class="btn btn-cancel-player" data-action="hide-add-player" data-team="team1">Отмена</button>
+                        </div>
+                    </div>
+                    
+                    <p class="players-count" id="team1-count">0 игроков</p>
+                </div>
+            </div>
+            
+            <div class="team-section">
+                <div class="form-group">
+                    <label>Команда 2</label>
+                    <input type="text" id="team2-name-input" placeholder="Название команды 2" value="">
+                </div>
+                
+                <div class="players-section">
+                    <h3 id="team2-header">Команда 2</h3>
+                    <div id="team2-players-list" class="players-list"></div>
+                    
+                    <button type="button" class="btn btn-add-player" data-action="show-add-player" data-team="team2">+ Добавить игрока</button>
+                    
+                    <div id="team2-add-form" class="player-form hidden">
+                        <input type="text" name="name" placeholder="Имя игрока" maxlength="30">
+                        <input type="number" name="number" placeholder="Номер (опционально)" min="1" max="99">
+                        <div class="player-form-buttons">
+                            <button type="button" class="btn btn-save-player" data-action="add-player" data-team="team2">Сохранить</button>
+                            <button type="button" class="btn btn-cancel-player" data-action="hide-add-player" data-team="team2">Отмена</button>
+                        </div>
+                    </div>
+                    
+                    <p class="players-count" id="team2-count">0 игроков</p>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Длительность периода (мин)</label>
+                <input type="number" id="period-duration" value="20" min="1" max="60">
+            </div>
+            
+            <button type="button" class="btn btn-primary" data-action="start-match">Начать матч</button>
         </section>
 
         <!-- Экран матча -->
-        <section id="match-screen" class="screen hidden">
+        <section id="screen-match" class="screen hidden">
             <div class="scoreboard">
                 <div class="team team1">
-                    <h2 id="team1-display">Команда 1</h2>
-                    <div class="score" id="score1">0</div>
-                    <button class="btn btn-goal" data-team="1">+1 гол</button>
+                    <h2 id="team1-name">Команда 1</h2>
+                    <div class="score" id="score-team1">0</div>
+                    <button class="btn btn-goal" data-action="open-goal-modal" data-team="team1">+1 гол</button>
                 </div>
                 
                 <div class="timer-section">
-                    <div class="timer" id="timer">20:00</div>
-                    <div class="period" id="period-display">1-й период</div>
-                    <button class="btn btn-pause" id="pause-btn">Пауза</button>
+                    <div class="timer" id="timer-display">20:00</div>
+                    <div class="period" id="period-display">1 период</div>
+                    <button class="btn btn-pause" id="btn-toggle-timer" data-action="toggle-timer">Пауза</button>
                 </div>
                 
                 <div class="team team2">
-                    <h2 id="team2-display">Команда 2</h2>
-                    <div class="score" id="score2">0</div>
-                    <button class="btn btn-goal" data-team="2">+1 гол</button>
+                    <h2 id="team2-name">Команда 2</h2>
+                    <div class="score" id="score-team2">0</div>
+                    <button class="btn btn-goal" data-action="open-goal-modal" data-team="team2">+1 гол</button>
                 </div>
             </div>
             
             <div class="match-actions">
-                <button class="btn btn-stats" id="stats-btn">Статистика</button>
-                <button class="btn btn-finish" id="finish-btn">Завершить матч</button>
+                <button class="btn btn-stats" data-action="open-stats">Статистика</button>
+                <button class="btn btn-substitution" data-action="open-subs-modal" data-team="team1">Замены (К1)</button>
+                <button class="btn btn-substitution" data-action="open-subs-modal" data-team="team2">Замены (К2)</button>
+                <button class="btn btn-finish" data-action="finish-match">Завершить матч</button>
             </div>
         </section>
 
         <!-- Экран статистики -->
-        <section id="stats-screen" class="screen hidden">
+        <section id="screen-stats" class="screen hidden">
             <div class="stats-header">
                 <h2>Статистика игроков</h2>
-                <button class="btn btn-back" id="back-to-match-btn">← Назад к матчу</button>
+                <button class="btn btn-back" data-action="back-to-match">← Назад к матчу</button>
             </div>
             
-            <div class="stats-content">
-                <!-- Статистика команды 1 -->
-                <div class="team-stats-section">
-                    <h3 id="stats-team1-name">Команда 1</h3>
-                    <div class="stats-table-wrapper">
-                        <table class="stats-table">
-                            <thead>
-                                <tr>
-                                    <th>№</th>
-                                    <th>Игрок</th>
-                                    <th>Г</th>
-                                    <th>А</th>
-                                    <th>Г+А</th>
-                                    <th>Мин</th>
-                                </tr>
-                            </thead>
-                            <tbody id="stats-team1-body">
-                                <!-- Данные заполняются JS -->
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="stats-totals" id="stats-team1-totals">
-                        Всего: Г — 0, А — 0
-                    </div>
-                </div>
-                
-                <!-- Статистика команды 2 -->
-                <div class="team-stats-section">
-                    <h3 id="stats-team2-name">Команда 2</h3>
-                    <div class="stats-table-wrapper">
-                        <table class="stats-table">
-                            <thead>
-                                <tr>
-                                    <th>№</th>
-                                    <th>Игрок</th>
-                                    <th>Г</th>
-                                    <th>А</th>
-                                    <th>Г+А</th>
-                                    <th>Мин</th>
-                                </tr>
-                            </thead>
-                            <tbody id="stats-team2-body">
-                                <!-- Данные заполняются JS -->
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="stats-totals" id="stats-team2-totals">
-                        Всего: Г — 0, А — 0
-                    </div>
-                </div>
+            <div id="stats-content" class="stats-content">
+                <!-- Заполняется JS -->
             </div>
         </section>
     </div>
 
-    <!-- Модальное окно редактирования игрока -->
-    <div id="edit-player-modal" class="modal hidden">
-        <div class="modal-content">
-            <h3>Редактировать игрока</h3>
-            <input type="hidden" id="edit-player-id">
-            <input type="hidden" id="edit-player-team">
-            <div class="form-group">
-                <label for="edit-player-name">Имя игрока</label>
-                <input type="text" id="edit-player-name" placeholder="Имя игрока" maxlength="30">
-            </div>
-            <div class="form-group">
-                <label for="edit-player-number">Номер (опционально)</label>
-                <input type="number" id="edit-player-number" placeholder="Номер" min="1" max="99">
-            </div>
-            <div class="modal-buttons">
-                <button class="btn btn-save" id="save-edit-btn">Сохранить</button>
-                <button class="btn btn-cancel" id="cancel-edit-btn">Отмена</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Модальное окно выбора автора гола -->
-    <div id="goal-modal" class="modal hidden">
-        <div class="modal-content">
-            <h3 id="goal-modal-title">Записать гол</h3>
-            <input type="hidden" id="goal-team-id">
-            
-            <div class="form-group">
-                <label for="goal-scorer">Автор гола *</label>
-                <select id="goal-scorer">
-                    <option value="">-- Выберите игрока --</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label for="goal-assist">Ассистент (опционально)</label>
-                <select id="goal-assist">
-                    <option value="">Нет</option>
-                </select>
-            </div>
-            
-            <div class="modal-buttons">
-                <button class="btn btn-save" id="confirm-goal-btn">Записать гол</button>
-                <button class="btn btn-cancel" id="cancel-goal-btn">Отмена</button>
-            </div>
-        </div>
-    </div>
+    <!-- Универсальный контейнер модальных окон -->
+    <div id="modal-container" class="modal hidden"></div>
 
     <script src="app.js"></script>
 </body>

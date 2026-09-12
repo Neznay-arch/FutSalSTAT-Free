@@ -31,7 +31,7 @@ body {
 }
 
 /* Стили для экрана нового матча */
-#new-match-screen h1 {
+#screen-new-match h1 {
     text-align: center;
     margin-bottom: 30px;
     font-size: 2rem;
@@ -44,14 +44,6 @@ body {
     margin-bottom: 25px;
 }
 
-.team-section h3 {
-    margin: 15px 0 10px 0;
-    font-size: 1.1rem;
-    color: #4ecca3;
-    border-bottom: 1px solid rgba(78, 204, 163, 0.3);
-    padding-bottom: 8px;
-}
-
 .players-section {
     margin-top: 15px;
 }
@@ -61,7 +53,7 @@ body {
     margin-bottom: 10px;
 }
 
-.player-item {
+.players-list li {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -72,7 +64,7 @@ body {
     transition: background 0.3s;
 }
 
-.player-item:hover {
+.players-list li:hover {
     background: rgba(255, 255, 255, 0.15);
 }
 
@@ -80,31 +72,10 @@ body {
     display: flex;
     align-items: center;
     gap: 12px;
+    flex-wrap: wrap;
 }
 
-.player-actions {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-}
-
-.btn-edit-player {
-    background: rgba(52, 152, 219, 0.3);
-    color: #3498db;
-    border: none;
-    padding: 6px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    transition: all 0.3s;
-}
-
-.btn-edit-player:hover {
-    background: rgba(52, 152, 219, 0.5);
-    color: #fff;
-}
-
-.player-number {
+.badge {
     background: rgba(78, 204, 163, 0.3);
     color: #4ecca3;
     width: 28px;
@@ -117,22 +88,43 @@ body {
     font-size: 0.9rem;
 }
 
-.player-name {
-    font-weight: 500;
+.status-badge {
+    background: rgba(52, 152, 219, 0.3);
+    color: #3498db;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
 }
 
-.btn-delete-player {
-    background: rgba(231, 76, 60, 0.3);
-    color: #e74c3c;
+.player-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.btn-icon {
+    background: rgba(52, 152, 219, 0.3);
+    color: #3498db;
     border: none;
-    padding: 6px 12px;
+    padding: 6px 10px;
     border-radius: 6px;
     cursor: pointer;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     transition: all 0.3s;
 }
 
-.btn-delete-player:hover {
+.btn-icon:hover {
+    background: rgba(52, 152, 219, 0.5);
+    color: #fff;
+}
+
+.btn-icon.btn-danger {
+    background: rgba(231, 76, 60, 0.3);
+    color: #e74c3c;
+}
+
+.btn-icon.btn-danger:hover {
     background: rgba(231, 76, 60, 0.5);
     color: #fff;
 }
@@ -188,13 +180,6 @@ body {
     text-align: center;
 }
 
-.no-players {
-    color: rgba(255, 255, 255, 0.5);
-    font-style: italic;
-    text-align: center;
-    padding: 10px;
-}
-
 .btn-add-player {
     background: rgba(78, 204, 163, 0.2);
     color: #4ecca3;
@@ -246,12 +231,12 @@ body {
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s;
-    width: 100%;
 }
 
 .btn-primary {
     background: #4ecca3;
     color: #1a1a2e;
+    width: 100%;
 }
 
 .btn-primary:hover {
@@ -265,6 +250,7 @@ body {
     margin-top: 15px;
     padding: 18px;
     font-size: 18px;
+    width: 100%;
 }
 
 .btn-goal:hover {
@@ -276,6 +262,7 @@ body {
     background: #f39c12;
     color: #1a1a2e;
     margin-top: 15px;
+    width: 100%;
 }
 
 .btn-pause:hover {
@@ -285,22 +272,34 @@ body {
 .btn-finish {
     background: rgba(255, 255, 255, 0.2);
     color: #fff;
-    margin-top: 30px;
 }
 
 .btn-finish:hover {
     background: rgba(255, 255, 255, 0.3);
 }
 
+.btn-substitution {
+    background: rgba(52, 152, 219, 0.3);
+    color: #3498db;
+    font-size: 14px;
+    padding: 12px;
+}
+
+.btn-substitution:hover {
+    background: rgba(52, 152, 219, 0.5);
+}
+
 /* Кнопки действий матча */
 .match-actions {
     display: flex;
-    gap: 15px;
-    margin-top: 30px;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 20px;
 }
 
 .match-actions .btn {
     flex: 1;
+    min-width: 120px;
 }
 
 .btn-stats {
@@ -310,6 +309,17 @@ body {
 
 .btn-stats:hover {
     background: #2980b9;
+}
+
+.btn-back {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    padding: 10px 20px;
+    font-size: 14px;
+}
+
+.btn-back:hover {
+    background: rgba(255, 255, 255, 0.3);
 }
 
 /* Модальные окна */
@@ -343,6 +353,14 @@ body {
     font-size: 1.3rem;
 }
 
+.modal-content label {
+    display: block;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
 .modal-buttons {
     display: flex;
     gap: 10px;
@@ -354,21 +372,12 @@ body {
     padding: 12px 20px;
 }
 
-.btn-save {
-    background: #4ecca3;
-    color: #1a1a2e;
-}
-
-.btn-save:hover {
-    background: #45b896;
-}
-
-.btn-cancel {
+.btn-secondary {
     background: rgba(255, 255, 255, 0.2);
     color: #fff;
 }
 
-.btn-cancel:hover {
+.btn-secondary:hover {
     background: rgba(255, 255, 255, 0.3);
 }
 
@@ -382,7 +391,6 @@ body {
     background: rgba(255, 255, 255, 0.1);
     color: #fff;
     font-size: 16px;
-    margin-top: 5px;
 }
 
 .modal-content select:focus,
@@ -406,17 +414,6 @@ body {
 .stats-header h2 {
     margin-bottom: 15px;
     font-size: 1.5rem;
-}
-
-.btn-back {
-    background: rgba(255, 255, 255, 0.2);
-    color: #fff;
-    padding: 10px 20px;
-    font-size: 14px;
-}
-
-.btn-back:hover {
-    background: rgba(255, 255, 255, 0.3);
 }
 
 .stats-content {
@@ -465,13 +462,8 @@ body {
     background: rgba(255, 255, 255, 0.05);
 }
 
-.stats-table .player-leader {
-    background: rgba(241, 196, 15, 0.2);
-}
-
-.stats-table .leader-badge {
-    margin-left: 5px;
-    font-size: 0.8rem;
+.leader-row {
+    background: rgba(241, 196, 15, 0.15) !important;
 }
 
 .stats-totals {
@@ -481,13 +473,6 @@ body {
     text-align: center;
     font-weight: 600;
     color: #4ecca3;
-}
-
-.no-stats-message {
-    text-align: center;
-    padding: 20px;
-    color: rgba(255, 255, 255, 0.5);
-    font-style: italic;
 }
 
 /* Табло матча */
@@ -547,7 +532,7 @@ body {
         padding: 20px;
     }
     
-    #new-match-screen h1 {
+    #screen-new-match h1 {
         font-size: 1.5rem;
     }
     
@@ -557,7 +542,7 @@ body {
     }
     
     .timer-section {
-        order: -1; /* Таймер сверху на мобильных */
+        order: -1;
     }
     
     .score {
@@ -568,18 +553,15 @@ body {
         font-size: 2.5rem;
     }
     
-    .btn {
-        padding: 12px 20px;
-        font-size: 14px;
+    .match-actions {
+        flex-direction: column;
     }
     
-    .btn-goal {
-        padding: 15px;
-        font-size: 16px;
+    .match-actions .btn {
+        width: 100%;
     }
 }
 
-/* Дополнительные медиа-запросы для очень маленьких экранов */
 @media (max-width: 350px) {
     .score {
         font-size: 2.5rem;
