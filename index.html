@@ -12,14 +12,60 @@
         <section id="new-match-screen" class="screen">
             <h1>Новый матч</h1>
             <form id="new-match-form">
-                <div class="form-group">
-                    <label for="team1-name">Команда 1</label>
-                    <input type="text" id="team1-name" placeholder="Название команды 1" required>
+                <div class="team-section">
+                    <div class="form-group">
+                        <label for="team1-name">Команда 1</label>
+                        <input type="text" id="team1-name" placeholder="Название команды 1" required>
+                    </div>
+                    
+                    <!-- Секция игроков команды 1 -->
+                    <div class="players-section">
+                        <h3>Игроки команды 1</h3>
+                        <div id="team1-players-list" class="players-list"></div>
+                        
+                        <button type="button" class="btn btn-add-player" data-team="1">+ Добавить игрока</button>
+                        
+                        <!-- Форма добавления игрока (скрыта по умолчанию) -->
+                        <div id="team1-player-form" class="player-form hidden">
+                            <input type="text" id="team1-player-name" placeholder="Имя игрока" maxlength="30">
+                            <input type="number" id="team1-player-number" placeholder="Номер (опционально)" min="1" max="99">
+                            <div class="player-form-buttons">
+                                <button type="button" class="btn btn-save-player" data-team="1">Сохранить</button>
+                                <button type="button" class="btn btn-cancel-player" data-team="1">Отмена</button>
+                            </div>
+                        </div>
+                        
+                        <p class="players-count" id="team1-players-count">0 игроков (минимум 1, максимум 12)</p>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="team2-name">Команда 2</label>
-                    <input type="text" id="team2-name" placeholder="Название команды 2" required>
+                
+                <div class="team-section">
+                    <div class="form-group">
+                        <label for="team2-name">Команда 2</label>
+                        <input type="text" id="team2-name" placeholder="Название команды 2" required>
+                    </div>
+                    
+                    <!-- Секция игроков команды 2 -->
+                    <div class="players-section">
+                        <h3>Игроки команды 2</h3>
+                        <div id="team2-players-list" class="players-list"></div>
+                        
+                        <button type="button" class="btn btn-add-player" data-team="2">+ Добавить игрока</button>
+                        
+                        <!-- Форма добавления игрока (скрыта по умолчанию) -->
+                        <div id="team2-player-form" class="player-form hidden">
+                            <input type="text" id="team2-player-name" placeholder="Имя игрока" maxlength="30">
+                            <input type="number" id="team2-player-number" placeholder="Номер (опционально)" min="1" max="99">
+                            <div class="player-form-buttons">
+                                <button type="button" class="btn btn-save-player" data-team="2">Сохранить</button>
+                                <button type="button" class="btn btn-cancel-player" data-team="2">Отмена</button>
+                            </div>
+                        </div>
+                        
+                        <p class="players-count" id="team2-players-count">0 игроков (минимум 1, максимум 12)</p>
+                    </div>
                 </div>
+                
                 <div class="form-group">
                     <label for="period-duration">Длительность периода (мин)</label>
                     <input type="number" id="period-duration" value="20" min="1" max="60" required>
