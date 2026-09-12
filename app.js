@@ -19,9 +19,10 @@ let matchState = {
     period: 1,
     isPaused: false,
     timerInterval: null,
-    team1Players: [], // массив игроков {id, name, number}
+    team1Players: [], // массив игроков {id, name, number, isOnField}
     team2Players: [],
-    events: [] // массив событий матча {id, teamId, scorerId, assistId, minute, timestamp}
+    events: [], // массив событий матча {id, teamId, scorerId, assistId, minute, timestamp}
+    playerTimes: {} // { playerId: { totalSeconds: 0, isOnField: false } }
 };
 
 // === DOM элементы ===
@@ -94,13 +95,55 @@ function init() {
         // Если есть сохранённый матч, загружаем его
         matchState = JSON.parse(savedData);
         
-        // Убеждаемся, что массив events существует (для совместимости со старыми данными)
+        // === МИГРАЦИЯ ДАННЫХ: добавляем недостающие поля для старых игроков ===
+        
+        // Миграция playerTimes и isOnField для каждой команды
+        [matchState.team1Players, matchState.team2Players].forEach((players, idx) => {
+            const teamNum = idx === 0 ? '1' : '2';
+            let startersCount = 0;
+            
+            // Сначала считаем, сколько уже помечено как старт
+            players.forEach(p => { if (p.isOnField) startersCount++; });
+            
+            players.forEach(player => {
+                // Добавляем isOnField если нет
+                if (typeof player.isOnField === 'undefined') {
+                    if (startersCount < 5) {
+                        player.isOnField = true;
+                        startersCount++;
+                    } else {
+                        player.isOnField = false;
+                    }
+                }
+                
+                // Инициализируем playerTimes если нет записи
+                if (!matchState.playerTimes) {
+                    matchState.playerTimes = {};
+                }
+                if (!matchState.playerTimes[player.id]) {
+                    matchState.playerTimes[player.id] = {
+                        totalSeconds: 0,
+                        isOnField: player.isOnField
+                    };
+                } else {
+                    // Синхронизируем статус
+                    matchState.playerTimes[player.id].isOnField = player.isOnField;
+                }
+            });
+        });
+        
+        // Убеждаемся, что массив events существует
         if (!matchState.events) {
             matchState.events = [];
+        }
+        // Убеждаемся, что playerTimes существует
+        if (!matchState.playerTimes) {
+            matchState.playerTimes = {};
         }
         
         showMatchScreen();
         updateDisplay();
+        renderPlayerListsForSubstitution();
         
         // Если таймер не на паузе и время ещё есть, запускаем таймер
         if (!matchState.isPaused && matchState.currentTime > 0) {
@@ -204,10 +247,33 @@ function handleNewMatch(e) {
         period: 1,
         isPaused: false,
         timerInterval: null,
-        team1Players: [...matchState.team1Players],
-        team2Players: [...matchState.team2Players],
-        events: [] // начинаем с пустого массива событий
+        team1Players: matchState.team1Players.map(p => ({...p})), // Копируем с isOnField
+        team2Players: matchState.team2Players.map(p => ({...p})),
+        events: [], // начинаем с пустого массива событий
+        playerTimes: {} // начинаем с пустого объекта времени
     };
+    
+    // Инициализируем playerTimes для каждого игрока и определяем стартовый состав (первые 5)
+    [matchState.team1Players, matchState.team2Players].forEach((players, idx) => {
+        let startersCount = 0;
+        players.forEach(player => {
+            // Если isOnField не установлен, первые 5 делаем стартовыми
+            if (typeof player.isOnField === 'undefined') {
+                if (startersCount < 5) {
+                    player.isOnField = true;
+                    startersCount++;
+                } else {
+                    player.isOnField = false;
+                }
+            }
+            
+            // Инициализируем время
+            matchState.playerTimes[player.id] = {
+                totalSeconds: 0,
+                isOnField: player.isOnField
+            };
+        });
+    });
     
     // Сохраняем в localStorage
     saveToStorage();
@@ -378,6 +444,18 @@ function startTimer() {
         if (matchState.currentTime > 0 && !matchState.isPaused) {
             matchState.currentTime--;
             updateDisplay();
+            
+            // === Учёт игрового времени игроков на поле ===
+            // Начисляем время только тем, кто сейчас на поле (isOnField === true)
+            if (matchState.playerTimes) {
+                Object.keys(matchState.playerTimes).forEach(playerId => {
+                    const pt = matchState.playerTimes[playerId];
+                    if (pt && pt.isOnField) {
+                        pt.totalSeconds++;
+                    }
+                });
+            }
+            
             saveToStorage();
             
             // Если время вышло
@@ -467,7 +545,8 @@ function saveToStorage() {
         isPaused: matchState.isPaused,
         team1Players: matchState.team1Players,
         team2Players: matchState.team2Players,
-        events: matchState.events
+        events: matchState.events,
+        playerTimes: matchState.playerTimes
     };
     
     localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
@@ -742,11 +821,18 @@ function renderTeamStats(teamNum, players) {
             }
         });
         
+        // Получаем время игрока из playerTimes
+        let timeSeconds = 0;
+        if (matchState.playerTimes && matchState.playerTimes[player.id]) {
+            timeSeconds = matchState.playerTimes[player.id].totalSeconds || 0;
+        }
+        
         return {
             ...player,
             goals,
             assists,
-            total: goals + assists
+            total: goals + assists,
+            timeSeconds
         };
     });
     
@@ -762,11 +848,19 @@ function renderTeamStats(teamNum, players) {
     // Находим максимальный total для определения лидера
     const maxTotal = Math.max(...playerStats.map(p => p.total), 0);
     
+    // Функция форматирования времени MM:SS
+    function formatTimeMMSS(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    
     // Генерируем HTML таблицы
     tbody.innerHTML = playerStats.map((player, index) => {
         const isLeader = player.total === maxTotal && player.total > 0;
         const leaderBadge = isLeader ? '<span class="leader-badge">🏆</span>' : '';
         const leaderClass = isLeader ? 'player-leader' : '';
+        const timeDisplay = player.timeSeconds > 0 ? formatTimeMMSS(player.timeSeconds) : '0';
         
         return `
             <tr class="${leaderClass}">
@@ -775,7 +869,7 @@ function renderTeamStats(teamNum, players) {
                 <td>${player.goals}</td>
                 <td>${player.assists}</td>
                 <td><strong>${player.total}</strong></td>
-                <td>—</td>
+                <td>${timeDisplay}</td>
             </tr>
         `;
     }).join('');
