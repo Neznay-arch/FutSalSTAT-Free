@@ -1,6 +1,6 @@
 /**
  * Futsal Stat - Приложение для ведения статистики матчей по мини-футболу
- * Этап 2: Составы команд
+ * Этапы 3-4: Редактирование игроков, привязка голов, экран статистики
  */
 
 // === Константы ===
@@ -20,12 +20,14 @@ let matchState = {
     isPaused: false,
     timerInterval: null,
     team1Players: [], // массив игроков {id, name, number}
-    team2Players: []
+    team2Players: [],
+    events: [] // массив событий матча {id, teamId, scorerId, assistId, minute, timestamp}
 };
 
 // === DOM элементы ===
 const newMatchScreen = document.getElementById('new-match-screen');
 const matchScreen = document.getElementById('match-screen');
+const statsScreen = document.getElementById('stats-screen');
 const newMatchForm = document.getElementById('new-match-form');
 const team1NameInput = document.getElementById('team1-name');
 const team2NameInput = document.getElementById('team2-name');
@@ -38,6 +40,8 @@ const timerDisplay = document.getElementById('timer');
 const periodDisplay = document.getElementById('period-display');
 const pauseBtn = document.getElementById('pause-btn');
 const finishBtn = document.getElementById('finish-btn');
+const statsBtn = document.getElementById('stats-btn');
+const backToMatchBtn = document.getElementById('back-to-match-btn');
 const goalButtons = document.querySelectorAll('.btn-goal');
 
 // Элементы для управления игроками
@@ -55,6 +59,32 @@ const team2PlayerNumberInput = document.getElementById('team2-player-number');
 const team1PlayersCount = document.getElementById('team1-players-count');
 const team2PlayersCount = document.getElementById('team2-players-count');
 
+// Элементы модального окна редактирования игрока
+const editPlayerModal = document.getElementById('edit-player-modal');
+const editPlayerIdInput = document.getElementById('edit-player-id');
+const editPlayerTeamInput = document.getElementById('edit-player-team');
+const editPlayerNameInput = document.getElementById('edit-player-name');
+const editPlayerNumberInput = document.getElementById('edit-player-number');
+const saveEditBtn = document.getElementById('save-edit-btn');
+const cancelEditBtn = document.getElementById('cancel-edit-btn');
+
+// Элементы модального окна гола
+const goalModal = document.getElementById('goal-modal');
+const goalModalTitle = document.getElementById('goal-modal-title');
+const goalTeamIdInput = document.getElementById('goal-team-id');
+const goalScorerSelect = document.getElementById('goal-scorer');
+const goalAssistSelect = document.getElementById('goal-assist');
+const confirmGoalBtn = document.getElementById('confirm-goal-btn');
+const cancelGoalBtn = document.getElementById('cancel-goal-btn');
+
+// Элементы экрана статистики
+const statsTeam1Name = document.getElementById('stats-team1-name');
+const statsTeam2Name = document.getElementById('stats-team2-name');
+const statsTeam1Body = document.getElementById('stats-team1-body');
+const statsTeam2Body = document.getElementById('stats-team2-body');
+const statsTeam1Totals = document.getElementById('stats-team1-totals');
+const statsTeam2Totals = document.getElementById('stats-team2-totals');
+
 // === Инициализация приложения ===
 function init() {
     // Проверяем, есть ли сохранённые данные в localStorage
@@ -63,6 +93,12 @@ function init() {
     if (savedData) {
         // Если есть сохранённый матч, загружаем его
         matchState = JSON.parse(savedData);
+        
+        // Убеждаемся, что массив events существует (для совместимости со старыми данными)
+        if (!matchState.events) {
+            matchState.events = [];
+        }
+        
         showMatchScreen();
         updateDisplay();
         
@@ -90,9 +126,9 @@ function setupEventListeners() {
     // Создание нового матча
     newMatchForm.addEventListener('submit', handleNewMatch);
     
-    // Добавление гола
+    // Добавление гола (теперь открывает модальное окно)
     goalButtons.forEach(button => {
-        button.addEventListener('click', handleGoal);
+        button.addEventListener('click', handleGoalButtonClick);
     });
     
     // Пауза/продолжение
@@ -100,6 +136,15 @@ function setupEventListeners() {
     
     // Завершение матча
     finishBtn.addEventListener('click', handleFinishMatch);
+    
+    // Открытие экрана статистики
+    statsBtn.addEventListener('click', showStatsScreen);
+    
+    // Возврат к матчу
+    backToMatchBtn.addEventListener('click', () => {
+        statsScreen.classList.add('hidden');
+        matchScreen.classList.remove('hidden');
+    });
     
     // Управление игроками - показ формы добавления
     addPlayerButtons.forEach(button => {
@@ -115,6 +160,14 @@ function setupEventListeners() {
     cancelPlayerButtons.forEach(button => {
         button.addEventListener('click', handleCancelPlayerForm);
     });
+    
+    // Редактирование игрока - открытие модального окна
+    saveEditBtn.addEventListener('click', handleSaveEditPlayer);
+    cancelEditBtn.addEventListener('click', closeEditModal);
+    
+    // Модальное окно гола
+    confirmGoalBtn.addEventListener('click', handleConfirmGoal);
+    cancelGoalBtn.addEventListener('click', closeGoalModal);
 }
 
 // === Обработка создания нового матча ===
@@ -152,7 +205,8 @@ function handleNewMatch(e) {
         isPaused: false,
         timerInterval: null,
         team1Players: [...matchState.team1Players],
-        team2Players: [...matchState.team2Players]
+        team2Players: [...matchState.team2Players],
+        events: [] // начинаем с пустого массива событий
     };
     
     // Сохраняем в localStorage
@@ -166,18 +220,114 @@ function handleNewMatch(e) {
     startTimer();
 }
 
-// === Обработка добавления гола ===
-function handleGoal(e) {
+// === Обработка нажатия кнопки "+1 гол" - открывает модальное окно ===
+function handleGoalButtonClick(e) {
     const team = e.target.dataset.team;
+    const teamName = team === '1' ? matchState.team1Name : matchState.team2Name;
+    const players = team === '1' ? matchState.team1Players : matchState.team2Players;
     
+    // Проверка: есть ли игроки в команде
+    if (players.length === 0) {
+        alert('Сначала добавьте игроков в команду');
+        return;
+    }
+    
+    // Заполняем модальное окно
+    goalModalTitle.textContent = `Гол: ${teamName}`;
+    goalTeamIdInput.value = team;
+    
+    // Заполняем селект автора гола
+    goalScorerSelect.innerHTML = '<option value="">-- Выберите игрока --</option>';
+    players.forEach(player => {
+        const option = document.createElement('option');
+        option.value = player.id;
+        option.textContent = player.number 
+            ? `${player.number}. ${escapeHtml(player.name)}` 
+            : escapeHtml(player.name);
+        goalScorerSelect.appendChild(option);
+    });
+    
+    // Заполняем селект ассистента (те же игроки)
+    goalAssistSelect.innerHTML = '<option value="">Нет</option>';
+    players.forEach(player => {
+        const option = document.createElement('option');
+        option.value = player.id;
+        option.textContent = player.number 
+            ? `${player.number}. ${escapeHtml(player.name)}` 
+            : escapeHtml(player.name);
+        goalAssistSelect.appendChild(option);
+    });
+    
+    // Сбрасываем значения
+    goalScorerSelect.value = '';
+    goalAssistSelect.value = '';
+    
+    // Показываем модальное окно
+    goalModal.classList.remove('hidden');
+}
+
+// === Закрытие модального окна гола ===
+function closeGoalModal() {
+    goalModal.classList.add('hidden');
+    goalScorerSelect.value = '';
+    goalAssistSelect.value = '';
+}
+
+// === Подтверждение гола - запись события ===
+function handleConfirmGoal() {
+    const team = goalTeamIdInput.value;
+    const scorerId = goalScorerSelect.value;
+    const assistId = goalAssistSelect.value || null;
+    
+    // Проверка: автор гола обязателен
+    if (!scorerId) {
+        alert('Выберите автора гола');
+        return;
+    }
+    
+    // Проверка: ассистент не может быть тем же игроком
+    if (assistId && assistId === scorerId) {
+        alert('Ассистент не может быть тем же игроком, что и автор гола');
+        return;
+    }
+    
+    // Вычисляем текущую минуту матча
+    const totalSeconds = matchState.periodDuration * 60;
+    const elapsedSeconds = totalSeconds - matchState.currentTime;
+    const currentMinute = Math.floor(elapsedSeconds / 60) + 1;
+    
+    // Создаём событие гола
+    const goalEvent = {
+        id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(),
+        teamId: `team${team}`,
+        scorerId: parseInt(scorerId),
+        assistId: assistId ? parseInt(assistId) : null,
+        minute: currentMinute,
+        timestamp: Date.now()
+    };
+    
+    // Добавляем событие в массив
+    matchState.events.push(goalEvent);
+    
+    // Увеличиваем счёт
     if (team === '1') {
         matchState.score1++;
-    } else if (team === '2') {
+    } else {
         matchState.score2++;
     }
     
+    // Сохраняем и обновляем интерфейс
     saveToStorage();
     updateDisplay();
+    
+    // Закрываем модальное окно
+    closeGoalModal();
+}
+
+// === Обработка добавления гола (старая функция, теперь не используется напрямую) ===
+function handleGoal(e) {
+    // Эта функция больше не вызывается напрямую
+    // Вместо неё используется handleGoalButtonClick -> handleConfirmGoal
 }
 
 // === Обработка паузы ===
@@ -316,7 +466,8 @@ function saveToStorage() {
         period: matchState.period,
         isPaused: matchState.isPaused,
         team1Players: matchState.team1Players,
-        team2Players: matchState.team2Players
+        team2Players: matchState.team2Players,
+        events: matchState.events
     };
     
     localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
@@ -428,7 +579,10 @@ function updatePlayersListDisplay(team) {
                 ${player.number ? `<span class="player-number">${player.number}</span>` : ''}
                 <span class="player-name">${escapeHtml(player.name)}</span>
             </div>
-            <button class="btn-delete-player" onclick="handleDeletePlayer(${team}, ${player.id})">Удалить</button>
+            <div class="player-actions">
+                <button class="btn-edit-player" onclick="openEditModal(${team}, ${player.id})">✏️</button>
+                <button class="btn-delete-player" onclick="handleDeletePlayer(${team}, ${player.id})">Удалить</button>
+            </div>
         </div>
     `).join('');
 }
@@ -455,6 +609,181 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+// === Редактирование игроков ===
+
+// Открыть модальное окно редактирования игрока
+function openEditModal(team, playerId) {
+    const players = team === '1' ? matchState.team1Players : matchState.team2Players;
+    const player = players.find(p => p.id === playerId);
+    
+    if (!player) {
+        alert('Игрок не найден');
+        return;
+    }
+    
+    // Заполняем форму данными игрока
+    editPlayerIdInput.value = player.id;
+    editPlayerTeamInput.value = team;
+    editPlayerNameInput.value = player.name;
+    editPlayerNumberInput.value = player.number || '';
+    
+    // Показываем модальное окно
+    editPlayerModal.classList.remove('hidden');
+}
+
+// Закрыть модальное окно редактирования
+function closeEditModal() {
+    editPlayerModal.classList.add('hidden');
+    editPlayerIdInput.value = '';
+    editPlayerTeamInput.value = '';
+    editPlayerNameInput.value = '';
+    editPlayerNumberInput.value = '';
+}
+
+// Сохранить изменения игрока
+function handleSaveEditPlayer() {
+    const playerId = parseInt(editPlayerIdInput.value);
+    const team = editPlayerTeamInput.value;
+    const name = editPlayerNameInput.value.trim();
+    const number = editPlayerNumberInput.value.trim();
+    
+    // Проверка: имя обязательно
+    if (!name) {
+        alert('Введите имя игрока');
+        return;
+    }
+    
+    // Проверка номера: от 1 до 99 если указан
+    if (number) {
+        const numValue = parseInt(number);
+        if (isNaN(numValue) || numValue < 1 || numValue > 99) {
+            alert('Номер должен быть от 1 до 99');
+            return;
+        }
+    }
+    
+    // Получаем игроков команды
+    const players = team === '1' ? matchState.team1Players : matchState.team2Players;
+    
+    // Проверка на дубликаты номеров (исключая текущего игрока)
+    if (number) {
+        const numValue = parseInt(number);
+        const duplicate = players.find(p => p.number === numValue && p.id !== playerId);
+        if (duplicate) {
+            alert(`Номер ${numValue} уже занят игроком ${duplicate.name}`);
+            return;
+        }
+    }
+    
+    // Обновляем данные игрока
+    const playerIndex = players.findIndex(p => p.id === playerId);
+    if (playerIndex !== -1) {
+        players[playerIndex].name = name;
+        players[playerIndex].number = number ? parseInt(number) : null;
+        
+        // Обновляем отображение
+        updatePlayersListDisplay(team);
+        updatePlayersCount(team);
+        
+        // Сохраняем в localStorage
+        saveToStorage();
+        
+        // Закрываем модальное окно
+        closeEditModal();
+    }
+}
+
+// === Статистика игроков ===
+
+// Показать экран статистики
+function showStatsScreen() {
+    // Устанавливаем названия команд
+    statsTeam1Name.textContent = matchState.team1Name;
+    statsTeam2Name.textContent = matchState.team2Name;
+    
+    // Рассчитываем и отображаем статистику
+    renderTeamStats(1, matchState.team1Players);
+    renderTeamStats(2, matchState.team2Players);
+    
+    // Переключаемся на экран статистики
+    matchScreen.classList.add('hidden');
+    statsScreen.classList.remove('hidden');
+}
+
+// Рассчитать и отобразить статистику команды
+function renderTeamStats(teamNum, players) {
+    const tbody = teamNum === '1' ? statsTeam1Body : statsTeam2Body;
+    const totalsEl = teamNum === '1' ? statsTeam1Totals : statsTeam2Totals;
+    const teamId = `team${teamNum}`;
+    
+    // Если нет игроков
+    if (!players || players.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="no-stats-message">Нет данных</td></tr>';
+        totalsEl.textContent = 'Всего: Г — 0, А — 0';
+        return;
+    }
+    
+    // Подсчёт статистики для каждого игрока
+    const playerStats = players.map(player => {
+        let goals = 0;
+        let assists = 0;
+        
+        // Проходим по всем событиям матча
+        matchState.events.forEach(event => {
+            if (event.teamId === teamId) {
+                if (event.scorerId === player.id) {
+                    goals++;
+                }
+                if (event.assistId === player.id) {
+                    assists++;
+                }
+            }
+        });
+        
+        return {
+            ...player,
+            goals,
+            assists,
+            total: goals + assists
+        };
+    });
+    
+    // Сортировка: сначала по total (убывание), затем игроки без статистики ниже
+    playerStats.sort((a, b) => {
+        if (b.total !== a.total) {
+            return b.total - a.total;
+        }
+        // Если total одинаковый, сортируем по имени
+        return a.name.localeCompare(b.name);
+    });
+    
+    // Находим максимальный total для определения лидера
+    const maxTotal = Math.max(...playerStats.map(p => p.total), 0);
+    
+    // Генерируем HTML таблицы
+    tbody.innerHTML = playerStats.map((player, index) => {
+        const isLeader = player.total === maxTotal && player.total > 0;
+        const leaderBadge = isLeader ? '<span class="leader-badge">🏆</span>' : '';
+        const leaderClass = isLeader ? 'player-leader' : '';
+        
+        return `
+            <tr class="${leaderClass}">
+                <td>${player.number || '-'}</td>
+                <td>${escapeHtml(player.name)}${leaderBadge}</td>
+                <td>${player.goals}</td>
+                <td>${player.assists}</td>
+                <td><strong>${player.total}</strong></td>
+                <td>—</td>
+            </tr>
+        `;
+    }).join('');
+    
+    // Подсчёт итогов команды
+    const totalGoals = playerStats.reduce((sum, p) => sum + p.goals, 0);
+    const totalAssists = playerStats.reduce((sum, p) => sum + p.assists, 0);
+    totalsEl.textContent = `Всего: Г — ${totalGoals}, А — ${totalAssists}`;
 }
 
 // === Запуск приложения ===
