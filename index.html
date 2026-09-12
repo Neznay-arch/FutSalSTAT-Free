@@ -96,8 +96,119 @@
                 </div>
             </div>
             
-            <button class="btn btn-finish" id="finish-btn">Завершить матч</button>
+            <div class="match-actions">
+                <button class="btn btn-stats" id="stats-btn">Статистика</button>
+                <button class="btn btn-finish" id="finish-btn">Завершить матч</button>
+            </div>
         </section>
+
+        <!-- Экран статистики -->
+        <section id="stats-screen" class="screen hidden">
+            <div class="stats-header">
+                <h2>Статистика игроков</h2>
+                <button class="btn btn-back" id="back-to-match-btn">← Назад к матчу</button>
+            </div>
+            
+            <div class="stats-content">
+                <!-- Статистика команды 1 -->
+                <div class="team-stats-section">
+                    <h3 id="stats-team1-name">Команда 1</h3>
+                    <div class="stats-table-wrapper">
+                        <table class="stats-table">
+                            <thead>
+                                <tr>
+                                    <th>№</th>
+                                    <th>Игрок</th>
+                                    <th>Г</th>
+                                    <th>А</th>
+                                    <th>Г+А</th>
+                                    <th>Мин</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stats-team1-body">
+                                <!-- Данные заполняются JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="stats-totals" id="stats-team1-totals">
+                        Всего: Г — 0, А — 0
+                    </div>
+                </div>
+                
+                <!-- Статистика команды 2 -->
+                <div class="team-stats-section">
+                    <h3 id="stats-team2-name">Команда 2</h3>
+                    <div class="stats-table-wrapper">
+                        <table class="stats-table">
+                            <thead>
+                                <tr>
+                                    <th>№</th>
+                                    <th>Игрок</th>
+                                    <th>Г</th>
+                                    <th>А</th>
+                                    <th>Г+А</th>
+                                    <th>Мин</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stats-team2-body">
+                                <!-- Данные заполняются JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="stats-totals" id="stats-team2-totals">
+                        Всего: Г — 0, А — 0
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Модальное окно редактирования игрока -->
+    <div id="edit-player-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Редактировать игрока</h3>
+            <input type="hidden" id="edit-player-id">
+            <input type="hidden" id="edit-player-team">
+            <div class="form-group">
+                <label for="edit-player-name">Имя игрока</label>
+                <input type="text" id="edit-player-name" placeholder="Имя игрока" maxlength="30">
+            </div>
+            <div class="form-group">
+                <label for="edit-player-number">Номер (опционально)</label>
+                <input type="number" id="edit-player-number" placeholder="Номер" min="1" max="99">
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-save" id="save-edit-btn">Сохранить</button>
+                <button class="btn btn-cancel" id="cancel-edit-btn">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно выбора автора гола -->
+    <div id="goal-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3 id="goal-modal-title">Записать гол</h3>
+            <input type="hidden" id="goal-team-id">
+            
+            <div class="form-group">
+                <label for="goal-scorer">Автор гола *</label>
+                <select id="goal-scorer">
+                    <option value="">-- Выберите игрока --</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="goal-assist">Ассистент (опционально)</label>
+                <select id="goal-assist">
+                    <option value="">Нет</option>
+                </select>
+            </div>
+            
+            <div class="modal-buttons">
+                <button class="btn btn-save" id="confirm-goal-btn">Записать гол</button>
+                <button class="btn btn-cancel" id="cancel-goal-btn">Отмена</button>
+            </div>
+        </div>
     </div>
 
     <script src="app.js"></script>
