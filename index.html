@@ -3,118 +3,177 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Futsal Stat - Статистика мини-футбола</title>
+    <title>Futsal Stat</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
-        <!-- Экран создания нового матча -->
-        <section id="screen-new-match" class="screen">
+    <!-- Экран нового матча -->
+    <section id="screen-new-match" class="screen">
+        <div class="screen-header">
             <h1>Новый матч</h1>
-            
-            <div class="team-section">
-                <div class="form-group">
-                    <label>Команда 1</label>
-                    <input type="text" id="team1-name-input" placeholder="Название команды 1" value="">
-                </div>
-                
-                <div class="players-section">
-                    <h3 id="team1-header">Команда 1</h3>
-                    <div id="team1-players-list" class="players-list"></div>
-                    
-                    <button type="button" class="btn btn-add-player" data-action="show-add-player" data-team="team1">+ Добавить игрока</button>
-                    
-                    <div id="team1-add-form" class="player-form hidden">
-                        <input type="text" name="name" placeholder="Имя игрока" maxlength="30">
-                        <input type="number" name="number" placeholder="Номер (опционально)" min="1" max="99">
-                        <div class="player-form-buttons">
-                            <button type="button" class="btn btn-save-player" data-action="add-player" data-team="team1">Сохранить</button>
-                            <button type="button" class="btn btn-cancel-player" data-action="hide-add-player" data-team="team1">Отмена</button>
-                        </div>
-                    </div>
-                    
-                    <p class="players-count" id="team1-count">0 игроков</p>
-                </div>
-            </div>
-            
-            <div class="team-section">
-                <div class="form-group">
-                    <label>Команда 2</label>
-                    <input type="text" id="team2-name-input" placeholder="Название команды 2" value="">
-                </div>
-                
-                <div class="players-section">
-                    <h3 id="team2-header">Команда 2</h3>
-                    <div id="team2-players-list" class="players-list"></div>
-                    
-                    <button type="button" class="btn btn-add-player" data-action="show-add-player" data-team="team2">+ Добавить игрока</button>
-                    
-                    <div id="team2-add-form" class="player-form hidden">
-                        <input type="text" name="name" placeholder="Имя игрока" maxlength="30">
-                        <input type="number" name="number" placeholder="Номер (опционально)" min="1" max="99">
-                        <div class="player-form-buttons">
-                            <button type="button" class="btn btn-save-player" data-action="add-player" data-team="team2">Сохранить</button>
-                            <button type="button" class="btn btn-cancel-player" data-action="hide-add-player" data-team="team2">Отмена</button>
-                        </div>
-                    </div>
-                    
-                    <p class="players-count" id="team2-count">0 игроков</p>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label>Длительность периода (мин)</label>
-                <input type="number" id="period-duration" value="20" min="1" max="60">
-            </div>
-            
-            <button type="button" class="btn btn-primary" data-action="start-match">Начать матч</button>
-        </section>
+            <button type="button" class="btn" data-action="open-history">История</button>
+        </div>
 
-        <!-- Экран матча -->
-        <section id="screen-match" class="screen hidden">
-            <div class="scoreboard">
-                <div class="team team1">
-                    <h2 id="team1-name">Команда 1</h2>
-                    <div class="score" id="score-team1">0</div>
-                    <button class="btn btn-goal" data-action="open-goal-modal" data-team="team1">+1 гол</button>
-                </div>
-                
-                <div class="timer-section">
-                    <div class="timer" id="timer-display">20:00</div>
-                    <div class="period" id="period-display">1 период</div>
-                    <button class="btn btn-pause" id="btn-toggle-timer" data-action="toggle-timer">Пауза</button>
-                </div>
-                
-                <div class="team team2">
-                    <h2 id="team2-name">Команда 2</h2>
-                    <div class="score" id="score-team2">0</div>
-                    <button class="btn btn-goal" data-action="open-goal-modal" data-team="team2">+1 гол</button>
-                </div>
+        <!-- Команда 1 -->
+        <div class="panel">
+            <h2>Команда 1</h2>
+            <label for="team1-name-input">Название команды</label>
+            <input type="text" id="team1-name-input" class="input" placeholder="Введите название">
+            
+            <div class="row">
+                <span>Игроков:</span>
+                <span id="team1-count">0</span>
             </div>
             
-            <div class="match-actions">
-                <button class="btn btn-stats" data-action="open-stats">Статистика</button>
-                <button class="btn btn-substitution" data-action="open-subs-modal" data-team="team1">Замены (К1)</button>
-                <button class="btn btn-substitution" data-action="open-subs-modal" data-team="team2">Замены (К2)</button>
-                <button class="btn btn-finish" data-action="finish-match">Завершить матч</button>
+            <ul id="team1-players-list" class="player-list"></ul>
+            
+            <button type="button" class="btn" data-action="show-add-player" data-team="team1">Добавить игрока</button>
+            
+            <div id="team1-add-form" class="add-form hidden">
+                <input type="text" id="team1-player-name-input" class="input" placeholder="Имя игрока">
+                <input type="number" id="team1-player-number-input" class="input" placeholder="Номер">
+                <button type="button" class="btn btn-primary" data-action="add-player" data-team="team1">Добавить</button>
+                <button type="button" class="btn" data-action="hide-add-player" data-team="team1">Отмена</button>
             </div>
-        </section>
+        </div>
 
-        <!-- Экран статистики -->
-        <section id="screen-stats" class="screen hidden">
-            <div class="stats-header">
-                <h2>Статистика игроков</h2>
-                <button class="btn btn-back" data-action="back-to-match">← Назад к матчу</button>
+        <!-- Команда 2 -->
+        <div class="panel">
+            <h2>Команда 2</h2>
+            <label for="team2-name-input">Название команды</label>
+            <input type="text" id="team2-name-input" class="input" placeholder="Введите название">
+            
+            <div class="row">
+                <span>Игроков:</span>
+                <span id="team2-count">0</span>
             </div>
             
-            <div id="stats-content" class="stats-content">
-                <!-- Заполняется JS -->
+            <ul id="team2-players-list" class="player-list"></ul>
+            
+            <button type="button" class="btn" data-action="show-add-player" data-team="team2">Добавить игрока</button>
+            
+            <div id="team2-add-form" class="add-form hidden">
+                <input type="text" id="team2-player-name-input" class="input" placeholder="Имя игрока">
+                <input type="number" id="team2-player-number-input" class="input" placeholder="Номер">
+                <button type="button" class="btn btn-primary" data-action="add-player" data-team="team2">Добавить</button>
+                <button type="button" class="btn" data-action="hide-add-player" data-team="team2">Отмена</button>
             </div>
-        </section>
+        </div>
+
+        <!-- Длительность периода -->
+        <div class="panel">
+            <label for="period-duration">Длительность периода, минуты</label>
+            <input type="number" id="period-duration" class="input" value="20" min="1" max="60">
+        </div>
+
+        <button type="button" class="btn btn-primary btn-block" data-action="start-match">Начать матч</button>
+    </section>
+
+    <!-- Экран матча -->
+    <section id="screen-match" class="screen hidden">
+        <div class="scoreboard">
+            <div class="score-team">
+                <div class="score-name" id="team1-name">Команда 1</div>
+                <div class="score-value" id="score-team1">0</div>
+            </div>
+            
+            <div class="score-center">
+                <div class="timer-display" id="timer-display">20:00</div>
+                <div class="period-display" id="period-display">Период 1</div>
+            </div>
+            
+            <div class="score-team">
+                <div class="score-name" id="team2-name">Команда 2</div>
+                <div class="score-value" id="score-team2">0</div>
+            </div>
+        </div>
+
+        <div class="match-info">
+            <div class="row">
+                <span>Нарушения:</span>
+                <span id="fouls-team1">0</span>
+                <span>|</span>
+                <span id="fouls-team2">0</span>
+            </div>
+            
+            <div class="row">
+                <span>Тайм-ауты:</span>
+                <span id="timeouts-team1">0</span>
+                <span>|</span>
+                <span id="timeouts-team2">0</span>
+            </div>
+            
+            <div class="row">
+                <span>10-метровый:</span>
+                <span id="second-penalty-team1" class="penalty-indicator hidden">-</span>
+                <span>|</span>
+                <span id="second-penalty-team2" class="penalty-indicator hidden">-</span>
+            </div>
+        </div>
+
+        <div class="match-actions">
+            <button type="button" class="btn" data-action="toggle-timer">Пауза/Старт</button>
+            <button type="button" class="btn btn-primary" data-action="open-goal-modal" data-team="team1">Гол К1</button>
+            <button type="button" class="btn btn-primary" data-action="open-goal-modal" data-team="team2">Гол К2</button>
+            <button type="button" class="btn" data-action="open-subs-modal" data-team="team1">Замена К1</button>
+            <button type="button" class="btn" data-action="open-subs-modal" data-team="team2">Замена К2</button>
+            <button type="button" class="btn btn-danger" data-action="open-foul-modal">Нарушение</button>
+            <button type="button" class="btn btn-danger" data-action="open-timeout-modal">Тайм-аут</button>
+            <button type="button" class="btn btn-danger" data-action="open-red-card-modal">Удаление</button>
+            <button type="button" class="btn" data-action="open-stats">Статистика</button>
+            <button type="button" class="btn btn-danger btn-block" data-action="finish-match">Завершить матч</button>
+        </div>
+
+        <div class="mini-pitch-box">
+            <button type="button" class="mini-pitch-button" data-action="expand-pitch">
+                <svg id="mini-pitch" class="pitch-svg" viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Границы поля -->
+                    <rect x="2" y="2" width="116" height="76" fill="none" stroke="#fff" stroke-width="2"/>
+                    <!-- Центральная линия -->
+                    <line x1="60" y1="2" x2="60" y2="78" stroke="#fff" stroke-width="2"/>
+                    <!-- Центральный круг -->
+                    <circle cx="60" cy="40" r="10" fill="none" stroke="#fff" stroke-width="2"/>
+                    <!-- Левая штрафная зона -->
+                    <rect x="2" y="20" width="25" height="40" fill="none" stroke="#fff" stroke-width="2"/>
+                    <!-- Правая штрафная зона -->
+                    <rect x="93" y="20" width="25" height="40" fill="none" stroke="#fff" stroke-width="2"/>
+                    <!-- Точка 10-метрового слева -->
+                    <circle cx="27" cy="40" r="2" fill="#fff"/>
+                    <!-- Точка 10-метрового справа -->
+                    <circle cx="93" cy="40" r="2" fill="#fff"/>
+                </svg>
+            </button>
+        </div>
+    </section>
+
+    <!-- Экран статистики -->
+    <section id="screen-stats" class="screen hidden">
+        <div class="screen-header">
+            <h1>Статистика</h1>
+            <button type="button" class="btn" data-action="back-to-match">Назад к матчу</button>
+        </div>
+        <div id="stats-content" class="content-box"></div>
+    </section>
+
+    <!-- Экран истории -->
+    <section id="screen-history" class="screen hidden">
+        <div class="screen-header">
+            <h1>История матчей</h1>
+            <button type="button" class="btn" data-action="back-to-menu">Назад</button>
+        </div>
+        <div id="history-content" class="content-box"></div>
+    </section>
+
+    <!-- Модальный контейнер -->
+    <div id="modal-container" class="modal-container hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modal-title" class="modal-title">Заголовок</h2>
+                <button type="button" class="modal-close" data-action="close-modal">×</button>
+            </div>
+            <div id="modal-body" class="modal-body"></div>
+        </div>
     </div>
-
-    <!-- Универсальный контейнер модальных окон -->
-    <div id="modal-container" class="modal hidden"></div>
 
     <script src="app.js"></script>
 </body>
