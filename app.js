@@ -31,15 +31,13 @@ const state = {
         createdAt: null,
         finishedAt: null,
         periodDuration: 1200,
-        teams: {
-            team1: {
-                name: '',
-                players: []
-            },
-            team2: {
-                name: '',
-                players: []
-            }
+        team1: {
+            name: '',
+            players: []
+        },
+        team2: {
+            name: '',
+            players: []
         }
     }
 };
@@ -92,7 +90,7 @@ const Actions = {
             return;
         }
 
-        const team = state.match.teams[teamId];
+        const team = state.match[teamId];
         if (!team) return;
 
         if (team.players.length >= 12) {
@@ -113,7 +111,7 @@ const Actions = {
     },
 
     removePlayer(teamId, playerId) {
-        const team = state.match.teams[teamId];
+        const team = state.match[teamId];
         if (!team) return;
 
         team.players = team.players.filter(p => p.id !== playerId);
@@ -122,7 +120,22 @@ const Actions = {
     },
 
     setTeamName(teamId, name) {
-        state.match.teams[teamId].name = name;
+        state.match[teamId].name = name;
+    },
+
+    showModal(type, payload) {
+        state.modal = { type, payload };
+        Render.renderModal();
+    },
+
+    hideModal() {
+        state.modal = null;
+        Render.renderModal();
+    },
+
+    navigateTo(screenId) {
+        state.screen = screenId;
+        Render.renderScreen(state.screen);
     }
 };
 
@@ -147,8 +160,8 @@ const Render = {
         if (state.modal) {
             const titleEl = document.getElementById('modal-title');
             const bodyEl = document.getElementById('modal-body');
-            if (titleEl) titleEl.textContent = state.modal.title || 'Заголовок';
-            if (bodyEl) bodyEl.innerHTML = state.modal.body || '';
+            if (titleEl) titleEl.textContent = state.modal.payload.title || 'Заголовок';
+            if (bodyEl) bodyEl.innerHTML = state.modal.payload.message || '';
             container.classList.remove('hidden');
         } else {
             container.classList.add('hidden');
@@ -159,7 +172,7 @@ const Render = {
         const listEl = document.getElementById(`${teamId}-players-list`);
         if (!listEl) return;
 
-        const team = state.match.teams[teamId];
+        const team = state.match[teamId];
         if (!team) return;
 
         listEl.innerHTML = '';
@@ -193,7 +206,7 @@ const Render = {
         const countEl = document.getElementById(`${teamId}-count`);
         if (!countEl) return;
 
-        const team = state.match.teams[teamId];
+        const team = state.match[teamId];
         if (!team) return;
 
         countEl.textContent = team.players.length;
@@ -233,9 +246,20 @@ document.addEventListener('click', (event) => {
         case 'remove-player':
             if (team && playerId) Actions.removePlayer(team, playerId);
             break;
+        case 'open-history':
+            Actions.navigateTo('history');
+            break;
+        case 'back-to-menu':
+            Actions.navigateTo('new-match');
+            break;
+        case 'back-to-match':
+            Actions.navigateTo('match');
+            break;
+        case 'open-stats':
+            Actions.navigateTo('stats');
+            break;
         case 'close-modal':
-            state.modal = null;
-            Render.renderModal();
+            Actions.hideModal();
             break;
     }
 });
