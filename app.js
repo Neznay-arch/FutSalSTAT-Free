@@ -31,6 +31,10 @@ const state = {
         createdAt: null,
         finishedAt: null,
         periodDuration: 1200,
+        period: 1,
+        score: { team1: 0, team2: 0 },
+        fouls: { team1: 0, team2: 0 },
+        timeouts: { team1: 0, team2: 0 },
         team1: {
             name: '',
             players: []
@@ -46,6 +50,13 @@ const state = {
 // ACTIONS
 // ============================================
 const Actions = {
+    formatTime(totalSeconds) {
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        const pad = (num) => num.toString().padStart(2, '0');
+        return `${pad(minutes)}:${pad(seconds)}`;
+    },
+
     generatePlayerId() {
         const timestamp = Date.now();
         const randomPart = Math.random().toString(36).substring(2, 8);
@@ -136,6 +147,66 @@ const Actions = {
     navigateTo(screenId) {
         state.screen = screenId;
         Render.renderScreen(state.screen);
+    },
+
+    startMatch() {
+        // 1. Валидация названия первой команды
+        const team1Name = state.match.team1.name.trim();
+        if (!team1Name) {
+            Actions.showModal('error', { title: 'Ошибка', message: 'Введите название первой команды' });
+            return;
+        }
+
+        // 2. Валидация названия второй команды
+        const team2Name = state.match.team2.name.trim();
+        if (!team2Name) {
+            Actions.showModal('error', { title: 'Ошибка', message: 'Введите название второй команды' });
+            return;
+        }
+
+        // 3. Валидация игроков первой команды
+        if (state.match.team1.players.length === 0) {
+            Actions.showModal('error', { title: 'Ошибка', message: 'Добавьте хотя бы одного игрока в первую команду' });
+            return;
+        }
+
+        // 4. Валидация игроков второй команды
+        if (state.match.team2.players.length === 0) {
+            Actions.showModal('error', { title: 'Ошибка', message: 'Добавьте хотя бы одного игрока во вторую команду' });
+            return;
+        }
+
+        // 5. Валидация длительности периода
+        const durationInput = document.getElementById('period-duration');
+        const durationValue = durationInput ? parseInt(durationInput.value, 10) : 0;
+
+        if (!durationValue || durationValue <= 0) {
+            Actions.showModal('error', { title: 'Ошибка', message: 'Некорректная длительность периода' });
+            return;
+        }
+
+        // Запись длительности в секундах
+        state.match.periodDuration = durationValue * 60;
+
+        // Генерация ID и времени создания, если матч новый
+        if (!state.match.id) {
+            state.match.id = Actions.generatePlayerId();
+            state.match.createdAt = Date.now();
+        }
+
+        // Сброс игровых параметров перед стартом
+        state.match.period = 1;
+        state.match.score.team1 = 0;
+        state.match.score.team2 = 0;
+        state.match.fouls.team1 = 0;
+        state.match.fouls.team2 = 0;
+        state.match.timeouts.team1 = 0;
+        state.match.timeouts.team2 = 0;
+
+        // Переход на экран матча
+        state.screen = 'match';
+        Render.renderScreen(state.screen);
+        Render.renderMatch();
     }
 };
 
@@ -219,6 +290,48 @@ const Render = {
         Render.renderPlayersList('team2');
         Render.updatePlayerCount('team1');
         Render.updatePlayerCount('team2');
+    },
+
+    renderMatch() {
+        const match = state.match;
+
+        // Названия команд (textContent для безопасности)
+        const t1NameEl = document.getElementById('team1-name');
+        const t2NameEl = document.getElementById('team2-name');
+        if (t1NameEl) t1NameEl.textContent = match.team1.name;
+        if (t2NameEl) t2NameEl.textContent = match.team2.name;
+
+        // Счёт
+        const s1El = document.getElementById('score-team1');
+        const s2El = document.getElementById('score-team2');
+        if (s1El) s1El.textContent = match.score.team1;
+        if (s2El) s2El.textContent = match.score.team2;
+
+        // Таймер (статичный на этом шаге)
+        const timerEl = document.getElementById('timer-display');
+        if (timerEl) timerEl.textContent = Actions.formatTime(match.periodDuration);
+
+        // Период
+        const periodEl = document.getElementById('period-display');
+        if (periodEl) periodEl.textContent = `Период ${match.period}`;
+
+        // Нарушения
+        const f1El = document.getElementById('fouls-team1');
+        const f2El = document.getElementById('fouls-team2');
+        if (f1El) f1El.textContent = match.fouls.team1;
+        if (f2El) f2El.textContent = match.fouls.team2;
+
+        // Тайм-ауты
+        const to1El = document.getElementById('timeouts-team1');
+        const to2El = document.getElementById('timeouts-team2');
+        if (to1El) to1El.textContent = match.timeouts.team1;
+        if (to2El) to2El.textContent = match.timeouts.team2;
+
+        // Индикаторы 10-метрового (скрыты безусловно до Шага 6)
+        const sp1El = document.getElementById('second-penalty-team1');
+        const sp2El = document.getElementById('second-penalty-team2');
+        if (sp1El) sp1El.classList.add('hidden');
+        if (sp2El) sp2El.classList.add('hidden');
     }
 };
 
@@ -257,6 +370,9 @@ document.addEventListener('click', (event) => {
             break;
         case 'open-stats':
             Actions.navigateTo('stats');
+            break;
+        case 'start-match':
+            Actions.startMatch();
             break;
         case 'close-modal':
             Actions.hideModal();
