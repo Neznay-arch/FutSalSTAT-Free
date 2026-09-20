@@ -474,7 +474,7 @@ const Events = {
           Actions.startSecondPeriod();
           break;
         case 'finish-match':
-          Actions.showModal('error', { title: 'Завершение матча', message: 'Полное завершение и архивация будут реализованы позже.' });
+          // Заглушка до Шага 8: намеренно no-op, чтобы не разрушать блокирующую модалку period-end
           break;
         case 'close-modal':
           if (state.modal && state.modal.type === 'period-end') return;
