@@ -228,6 +228,21 @@ const Actions = {
     Render.renderTimer();
   },
 
+  startSecondPeriod() {
+    // Шаг 6 добавит перенос активных штрафов и сброс флага десятиметрового
+    state.match.period = 2;
+    state.match.fouls.team1 = 0;
+    state.match.fouls.team2 = 0;
+    state.match.timeouts.team1 = 0;
+    state.match.timeouts.team2 = 0;
+    state.match.timer.remainingSec = state.match.periodDuration;
+    state.match.timer.isRunning = false;
+    state.match.timer.lastTickAt = null;
+    state.modal = null;
+    Render.renderMatch();
+    Render.renderModal();
+  },
+
   tickTimer(now) {
     if (!state.match || !state.match.timer) return;
 
@@ -250,9 +265,15 @@ const Actions = {
       timer.remainingSec = 0;
       timer.isRunning = false;
       timer.lastTickAt = null;
+      Render.renderTimer();
+      if (state.match.period === 1) {
+        this.showModal('period-end', { title: 'Конец первого периода', message: 'Первый период завершён.' });
+      } else if (state.match.period === 2) {
+        this.showModal('period-end', { title: 'Конец матча', message: 'Матч завершён.' });
+      }
+    } else {
+      Render.renderTimer();
     }
-
-    Render.renderTimer();
   }
 };
 
@@ -278,15 +299,45 @@ const Render = {
     const container = document.getElementById('modal-container');
     const titleEl = document.getElementById('modal-title');
     const bodyEl = document.getElementById('modal-body');
+    const closeBtn = document.getElementById('modal-close');
 
     if (!container || !titleEl || !bodyEl) return;
 
-    if (state.modal) {
+    if (!state.modal) {
+      container.classList.add('hidden');
+      if (closeBtn) closeBtn.classList.remove('hidden');
+      return;
+    }
+
+    if (state.modal.type === 'period-end') {
+      if (closeBtn) closeBtn.classList.add('hidden');
+      titleEl.textContent = state.modal.payload.title;
+      bodyEl.innerHTML = '';
+      const period = state.match.period;
+      if (period === 1) {
+        const btn1 = document.createElement('button');
+        btn1.type = 'button';
+        btn1.setAttribute('data-action', 'start-second-period');
+        btn1.textContent = 'Начать второй период';
+        bodyEl.appendChild(btn1);
+        const btn2 = document.createElement('button');
+        btn2.type = 'button';
+        btn2.setAttribute('data-action', 'finish-match');
+        btn2.textContent = 'Завершить матч';
+        bodyEl.appendChild(btn2);
+      } else if (period === 2) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.setAttribute('data-action', 'finish-match');
+        btn.textContent = 'Завершить матч';
+        bodyEl.appendChild(btn);
+      }
+      container.classList.remove('hidden');
+    } else {
+      if (closeBtn) closeBtn.classList.remove('hidden');
       titleEl.textContent = state.modal.payload.title;
       bodyEl.textContent = state.modal.payload.message;
       container.classList.remove('hidden');
-    } else {
-      container.classList.add('hidden');
     }
   },
 
@@ -419,7 +470,14 @@ const Events = {
         case 'toggle-timer':
           Actions.toggleTimer();
           break;
+        case 'start-second-period':
+          Actions.startSecondPeriod();
+          break;
+        case 'finish-match':
+          Actions.showModal('error', { title: 'Завершение матча', message: 'Полное завершение и архивация будут реализованы позже.' });
+          break;
         case 'close-modal':
+          if (state.modal && state.modal.type === 'period-end') return;
           Actions.hideModal();
           break;
       }
@@ -464,6 +522,3 @@ if (document.readyState === 'loading') {
 } else {
   Init.init();
 }
-
-// step-4 state locked
-// step-5 period-end logic added
