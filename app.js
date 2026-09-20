@@ -466,3 +466,4 @@ if (document.readyState === 'loading') {
 }
 
 // step-4 state locked
+// step-5 period-end logic added
