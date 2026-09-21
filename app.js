@@ -46,6 +46,7 @@ const state = {
     score: { team1: 0, team2: 0 },
     fouls: { team1: 0, team2: 0 },
     timeouts: { team1: 0, team2: 0 },
+    events: [],
     timer: {
       remainingSec: 0,
       isRunning: false,
@@ -59,6 +60,9 @@ const state = {
 // ============================================================================
 // СЛОЙ ACTIONS
 // ============================================================================
+const SECOND_PENALTY_FOULS = 5;
+const FOUL_REASONS = ['Задержка соперника', 'Игра рукой', 'Опасная игра', 'Начальная позиция', 'Другое'];
+
 const Actions = {
   formatTime(totalSeconds) {
     const minutes = Math.floor(totalSeconds / 60);
@@ -202,6 +206,7 @@ const Actions = {
     state.match.fouls.team2 = 0;
     state.match.timeouts.team1 = 0;
     state.match.timeouts.team2 = 0;
+    state.match.events = [];
 
     state.match.timer.remainingSec = state.match.periodDuration;
     state.match.timer.isRunning = false;
@@ -229,7 +234,7 @@ const Actions = {
   },
 
   startSecondPeriod() {
-    // Шаг 6 добавит перенос активных штрафов и сброс флага десятиметрового
+    // Право на 10-метровый выводится из fouls и сбрасывается автоматически вместе с ними; перенос активных штрафов (меньшинств после удалений) добавит шаг удалений, т.к. удалений ещё нет
     state.match.period = 2;
     state.match.fouls.team1 = 0;
     state.match.fouls.team2 = 0;
@@ -241,6 +246,60 @@ const Actions = {
     state.modal = null;
     Render.renderMatch();
     Render.renderModal();
+  },
+
+  openFoulModal() {
+    state.modal = { type: 'foul', payload: { teamId: null, playerId: null, reason: null } };
+    Render.renderModal();
+  },
+
+  selectFoulTeam(teamId) {
+    if (state.modal && state.modal.type === 'foul') {
+      state.modal.payload.teamId = teamId;
+      state.modal.payload.playerId = null;
+      Render.renderModal();
+    }
+  },
+
+  selectFoulPlayer(playerId) {
+    if (state.modal && state.modal.type === 'foul') {
+      state.modal.payload.playerId = playerId;
+      Render.renderModal();
+    }
+  },
+
+  selectFoulReason(reason) {
+    if (state.modal && state.modal.type === 'foul') {
+      state.modal.payload.reason = reason;
+      Render.renderModal();
+    }
+  },
+
+  saveFoul() {
+    if (!state.modal || state.modal.type !== 'foul') return;
+
+    const payload = state.modal.payload;
+    if (!payload.teamId || !payload.playerId || !payload.reason) {
+      this.showModal('error', { title: 'Ошибка', message: 'Выберите команду, игрока и причину' });
+      return;
+    }
+
+    const team = state.match[payload.teamId];
+    team.fouls++;
+
+    const timeSec = state.match.periodDuration - state.match.timer.remainingSec;
+    state.match.events.push({
+      type: 'foul',
+      period: state.match.period,
+      timeSec,
+      teamId: payload.teamId,
+      playerId: payload.playerId,
+      reason: payload.reason
+    });
+
+    state.modal = null;
+    Render.renderModal();
+    Render.renderMatch();
   },
 
   tickTimer(now) {
@@ -333,6 +392,97 @@ const Render = {
         bodyEl.appendChild(btn);
       }
       container.classList.remove('hidden');
+    } else if (state.modal.type === 'foul') {
+      if (closeBtn) closeBtn.classList.remove('hidden');
+      titleEl.textContent = 'Нарушение';
+      bodyEl.innerHTML = '';
+
+      const payload = state.modal.payload;
+      const match = state.match;
+
+      const teamLabel = document.createElement('div');
+      teamLabel.style.marginBottom = '8px';
+      const teamName = (payload.teamId && match[payload.teamId]) ? match[payload.teamId].name : '—';
+      teamLabel.textContent = `Команда: ${teamName}`;
+      bodyEl.appendChild(teamLabel);
+
+      const teamBtn1 = document.createElement('button');
+      teamBtn1.type = 'button';
+      teamBtn1.setAttribute('data-action', 'select-foul-team');
+      teamBtn1.setAttribute('data-team', 'team1');
+      teamBtn1.textContent = 'Команда 1';
+      teamBtn1.style.marginRight = '8px';
+      bodyEl.appendChild(teamBtn1);
+
+      const teamBtn2 = document.createElement('button');
+      teamBtn2.type = 'button';
+      teamBtn2.setAttribute('data-action', 'select-foul-team');
+      teamBtn2.setAttribute('data-team', 'team2');
+      teamBtn2.textContent = 'Команда 2';
+      bodyEl.appendChild(teamBtn2);
+
+      const playerLabel = document.createElement('div');
+      playerLabel.style.marginBottom = '8px';
+      playerLabel.style.marginTop = '12px';
+      let playerName = '—';
+      if (payload.teamId && payload.playerId && match[payload.teamId]) {
+        const player = match[payload.teamId].players.find(p => p.id === payload.playerId);
+        if (player) playerName = `${player.number ? player.number + '. ' : ''}${player.name}`;
+      }
+      playerLabel.textContent = `Игрок: ${playerName}`;
+      bodyEl.appendChild(playerLabel);
+
+      if (payload.teamId) {
+        const players = match[payload.teamId].players;
+        players.forEach(p => {
+          const pBtn = document.createElement('button');
+          pBtn.type = 'button';
+          pBtn.setAttribute('data-action', 'select-foul-player');
+          pBtn.setAttribute('data-player-id', p.id);
+          pBtn.textContent = `${p.number ? p.number + '. ' : ''}${p.name}`;
+          pBtn.style.display = 'block';
+          pBtn.style.width = '100%';
+          pBtn.style.marginBottom = '4px';
+          pBtn.style.textAlign = 'left';
+          bodyEl.appendChild(pBtn);
+        });
+      } else {
+        const noTeamMsg = document.createElement('div');
+        noTeamMsg.textContent = 'Сначала выберите команду';
+        noTeamMsg.style.fontStyle = 'italic';
+        noTeamMsg.style.color = '#888';
+        bodyEl.appendChild(noTeamMsg);
+      }
+
+      const reasonLabel = document.createElement('div');
+      reasonLabel.style.marginBottom = '8px';
+      reasonLabel.style.marginTop = '12px';
+      reasonLabel.textContent = `Причина: ${payload.reason || '—'}`;
+      bodyEl.appendChild(reasonLabel);
+
+      FOUL_REASONS.forEach(reason => {
+        const rBtn = document.createElement('button');
+        rBtn.type = 'button';
+        rBtn.setAttribute('data-action', 'select-foul-reason');
+        rBtn.setAttribute('data-reason', reason);
+        rBtn.textContent = reason;
+        rBtn.style.display = 'block';
+        rBtn.style.width = '100%';
+        rBtn.style.marginBottom = '4px';
+        rBtn.style.textAlign = 'left';
+        bodyEl.appendChild(rBtn);
+      });
+
+      const saveBtn = document.createElement('button');
+      saveBtn.type = 'button';
+      saveBtn.setAttribute('data-action', 'save-foul');
+      saveBtn.textContent = 'Сохранить нарушение';
+      saveBtn.style.marginTop = '16px';
+      saveBtn.style.width = '100%';
+      saveBtn.className = 'btn btn-primary';
+      bodyEl.appendChild(saveBtn);
+
+      container.classList.remove('hidden');
     } else {
       if (closeBtn) closeBtn.classList.remove('hidden');
       titleEl.textContent = state.modal.payload.title;
@@ -407,8 +557,15 @@ const Render = {
 
     const sp1El = document.getElementById('second-penalty-team1');
     const sp2El = document.getElementById('second-penalty-team2');
-    if (sp1El) sp1El.classList.add('hidden');
-    if (sp2El) sp2El.classList.add('hidden');
+
+    if (sp1El) {
+      sp1El.textContent = (match.fouls.team1 >= SECOND_PENALTY_FOULS ? '10м' : '—');
+      sp1El.classList.remove('hidden');
+    }
+    if (sp2El) {
+      sp2El.textContent = (match.fouls.team2 >= SECOND_PENALTY_FOULS ? '10м' : '—');
+      sp2El.classList.remove('hidden');
+    }
   },
 
   renderTimer() {
@@ -474,11 +631,25 @@ const Events = {
           Actions.startSecondPeriod();
           break;
         case 'finish-match':
-          // Заглушка до Шага 8: намеренно no-op, чтобы не разрушать блокирующую модалку period-end
           break;
         case 'close-modal':
           if (state.modal && state.modal.type === 'period-end') return;
           Actions.hideModal();
+          break;
+        case 'open-foul-modal':
+          Actions.openFoulModal();
+          break;
+        case 'select-foul-team':
+          Actions.selectFoulTeam(btn.getAttribute('data-team'));
+          break;
+        case 'select-foul-player':
+          Actions.selectFoulPlayer(btn.getAttribute('data-player-id'));
+          break;
+        case 'select-foul-reason':
+          Actions.selectFoulReason(btn.getAttribute('data-reason'));
+          break;
+        case 'save-foul':
+          Actions.saveFoul();
           break;
       }
     });
